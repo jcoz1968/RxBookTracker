@@ -1,6 +1,8 @@
-import { Observable, of, from, fromEvent, concat } from "rxjs";
-import { ajax } from 'rxjs/ajax';
+import { Observable, of, from, fromEvent, concat, interval } from "rxjs";
+import { ajax } from "rxjs/ajax";
 import { allBooks, allReaders } from "./data";
+
+//#region creating observables
 
 // let allBooksObservable$ = Observable.create(subscriber => {
 //   if(document.title !== 'RxBookTracker') {
@@ -42,21 +44,95 @@ import { allBooks, allReaders } from "./data";
 //     }
 //   });
 
-let button = document.getElementById('readersButton');
+// let button = document.getElementById('readersButton');
 
-fromEvent(button, 'click')
-  .subscribe(event => {
-    ajax('/api/readers')
-    .subscribe(ajaxResponse => {
-      console.log(ajaxResponse);
+// fromEvent(button, 'click')
+//   .subscribe(event => {
+//     ajax('/api/readers')
+//     .subscribe(ajaxResponse => {
+//       console.log(ajaxResponse);
 
-      let readers = ajaxResponse.response;
+//       let readers = ajaxResponse.response;
 
-    let readersDiv = document.getElementById('readers');
+//     let readersDiv = document.getElementById('readers');
 
-    for(let reader of readers) {
-      readersDiv.innerHTML += reader.name + '<br />';
-    }
+//     for(let reader of readers) {
+//       readersDiv.innerHTML += reader.name + '<br />';
+//     }
 
-    });
-  });
+//     });
+//   });
+
+//#endregion
+
+//#region subscribing to observables with observers
+
+// let books$ = from(allBooks);
+
+// let booksObserver = {
+//     next: book => console.log(`Title: ${book.title}`),
+//     error: err => console.log(`ERROR: ${err}`),
+//     complete: () => console.log('All done!'),
+// };
+
+// books$.subscribe(
+//     book => console.log(`Title: ${book.title}`),
+//     err => console.log(`ERROR: ${err}`),
+//     () => console.log('All done!'),
+// );
+
+// let currentTime$ = new Observable(subscriber => {
+//     const timeString = new Date().toLocaleTimeString();
+//     subscriber.next(timeString);
+//     subscriber.complete();
+// });
+
+// currentTime$.subscribe(
+//     currentTime => console.log(`Observer 1: ${currentTime}`)
+// );
+
+// setTimeout(() => {
+//     currentTime$.subscribe(
+//         currentTime => console.log(`Observer 2: ${currentTime}`)
+//     );
+// }, 1000);
+
+// setTimeout(() => {
+//     currentTime$.subscribe(
+//         currentTime => console.log(`Observer 3: ${currentTime}`)
+//     );
+// }, 2000);
+
+let timesDiv = document.getElementById("times");
+let button = document.getElementById("timerButton");
+
+// let timer$ = interval(1000);
+
+let timer$ = new Observable<any>(subscriber => {
+   let i = 0;
+   let intervalId = setInterval(() => {
+      subscriber.next(i++);
+   }, 1000);
+
+   return () => {
+      console.log('Executing teardown code.');
+      clearInterval(intervalId);
+   }
+});
+
+let timerConsoleSubscription = timer$.subscribe(
+   value => console.log(`${new Date().toLocaleTimeString()} (${value})`)
+);
+
+let timerSubscription = timer$.subscribe(
+  value =>
+    (timesDiv.innerHTML += `${new Date().toLocaleTimeString()} (${value}) <br>`),
+  null,
+  () => console.log("All done!")
+);
+
+timerSubscription.add(timerConsoleSubscription);
+
+fromEvent(button, "click").subscribe(event => timerSubscription.unsubscribe());
+
+//#endregion
