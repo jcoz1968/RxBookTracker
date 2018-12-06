@@ -2,6 +2,8 @@ import { Observable, of, from, fromEvent, concat } from "rxjs";
 import { ajax } from 'rxjs/ajax';
 import { allBooks, allReaders } from "./data";
 
+//#region creating observables
+
 // let allBooksObservable$ = Observable.create(subscriber => {
 //   if(document.title !== 'RxBookTracker') {
 //     subscriber.error('Incorrect page title.')
@@ -42,21 +44,43 @@ import { allBooks, allReaders } from "./data";
 //     }
 //   });
 
-let button = document.getElementById('readersButton');
+// let button = document.getElementById('readersButton');
 
-fromEvent(button, 'click')
-  .subscribe(event => {
-    ajax('/api/readers')
-    .subscribe(ajaxResponse => {
-      console.log(ajaxResponse);
+// fromEvent(button, 'click')
+//   .subscribe(event => {
+//     ajax('/api/readers')
+//     .subscribe(ajaxResponse => {
+//       console.log(ajaxResponse);
 
-      let readers = ajaxResponse.response;
+//       let readers = ajaxResponse.response;
 
-    let readersDiv = document.getElementById('readers');
+//     let readersDiv = document.getElementById('readers');
 
-    for(let reader of readers) {
-      readersDiv.innerHTML += reader.name + '<br />';
-    }
+//     for(let reader of readers) {
+//       readersDiv.innerHTML += reader.name + '<br />';
+//     }
 
-    });
-  });
+//     });
+//   });
+
+//#endregion
+
+//#region subscribing to observables with observers
+
+let books$ = from(allBooks);
+
+// let booksObserver = {
+//     next: book => console.log(`Title: ${book.title}`),
+//     error: err => console.log(`ERROR: ${err}`),
+//     complete: () => console.log('All done!'),
+// };
+
+books$.subscribe(
+    book => console.log(`Title: ${book.title}`),
+    err => console.log(`ERROR: ${err}`),
+    () => console.log('All done!'),
+);
+
+//#endregion
+
+
