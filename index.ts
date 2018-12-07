@@ -1,5 +1,6 @@
 import { Observable, of, from, fromEvent, concat, interval } from "rxjs";
 import { ajax } from "rxjs/ajax";
+import { mergeMap, filter, tap } from 'rxjs/operators';
 import { allBooks, allReaders } from "./data";
 
 //#region creating observables
@@ -103,36 +104,50 @@ import { allBooks, allReaders } from "./data";
 //     );
 // }, 2000);
 
-let timesDiv = document.getElementById("times");
-let button = document.getElementById("timerButton");
+// let timesDiv = document.getElementById("times");
+// let button = document.getElementById("timerButton");
 
-// let timer$ = interval(1000);
+// // let timer$ = interval(1000);
 
-let timer$ = new Observable<any>(subscriber => {
-   let i = 0;
-   let intervalId = setInterval(() => {
-      subscriber.next(i++);
-   }, 1000);
+// let timer$ = new Observable<any>(subscriber => {
+//    let i = 0;
+//    let intervalId = setInterval(() => {
+//       subscriber.next(i++);
+//    }, 1000);
 
-   return () => {
-      console.log('Executing teardown code.');
-      clearInterval(intervalId);
-   }
-});
+//    return () => {
+//       console.log('Executing teardown code.');
+//       clearInterval(intervalId);
+//    }
+// });
 
-let timerConsoleSubscription = timer$.subscribe(
-   value => console.log(`${new Date().toLocaleTimeString()} (${value})`)
-);
+// let timerConsoleSubscription = timer$.subscribe(
+//    value => console.log(`${new Date().toLocaleTimeString()} (${value})`)
+// );
 
-let timerSubscription = timer$.subscribe(
-  value =>
-    (timesDiv.innerHTML += `${new Date().toLocaleTimeString()} (${value}) <br>`),
-  null,
-  () => console.log("All done!")
-);
+// let timerSubscription = timer$.subscribe(
+//   value =>
+//     (timesDiv.innerHTML += `${new Date().toLocaleTimeString()} (${value}) <br>`),
+//   null,
+//   () => console.log("All done!")
+// );
 
-timerSubscription.add(timerConsoleSubscription);
+// timerSubscription.add(timerConsoleSubscription);
 
-fromEvent(button, "click").subscribe(event => timerSubscription.unsubscribe());
+// fromEvent(button, "click").subscribe(event => timerSubscription.unsubscribe());
+
+//#endregion
+
+//#region using operators
+
+ajax('/api/books')
+   .pipe(
+      mergeMap(ajaxResponse => ajaxResponse.response),
+      filter<any>(book => book.publicationYear < 1950),
+      tap(oldbook => console.log(`Title: ${oldbook.title}`))
+   )
+   .subscribe(
+      finalValue => console.log(finalValue)
+   );
 
 //#endregion
