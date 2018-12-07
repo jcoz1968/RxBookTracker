@@ -1,6 +1,6 @@
 import { Observable, of, from, fromEvent, concat, interval, throwError, Subject } from "rxjs";
 import { ajax } from "rxjs/ajax";
-import { publish, flatMap, mergeMap, filter, tap, catchError, take, takeUntil, multicast, refCount } from 'rxjs/operators';
+import { publish, flatMap, mergeMap, filter, tap, catchError, take, publishReplay, publishBehavior, takeUntil, multicast, refCount, publishLast } from 'rxjs/operators';
 import { allBooks, allReaders } from "./data";
 
 //#region creating observables
@@ -254,7 +254,10 @@ import { allBooks, allReaders } from "./data";
 let source$ = interval(1000).pipe(
    take(4),
    // multicast(new Subject()),
-   publish(),
+   // publish(),
+   // publishLast(),
+   // publishBehavior(42),
+   publishReplay(),
    refCount()
 );
 
