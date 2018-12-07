@@ -1,7 +1,8 @@
-import { Observable, of, from, fromEvent, concat, interval, throwError, Subject } from "rxjs";
+import { Observable, of, from, fromEvent, concat, interval, throwError, Subject, asyncScheduler, asapScheduler, queueScheduler, merge } from "rxjs";
 import { ajax } from "rxjs/ajax";
 import { publish, flatMap, mergeMap, filter, tap, catchError, take, publishReplay, publishBehavior, takeUntil, multicast, refCount, publishLast } from 'rxjs/operators';
 import { allBooks, allReaders } from "./data";
+import { async } from "rxjs/internal/scheduler/async";
 
 //#region creating observables
 
@@ -251,49 +252,62 @@ import { allBooks, allReaders } from "./data";
 
 // source$.subscribe(subject$);
 
-let source$ = interval(1000).pipe(
-   take(4),
-   // multicast(new Subject()),
-   // publish(),
-   // publishLast(),
-   // publishBehavior(42),
-   publishReplay(),
-   refCount()
-);
+// let source$ = interval(1000).pipe(
+//    take(4),
+//    // multicast(new Subject()),
+//    // publish(),
+//    // publishLast(),
+//    // publishBehavior(42),
+//    publishReplay(),
+//    refCount()
+// );
 
-// let subject$ = new Subject();
-// source$.subscribe(subject$);
+// // let subject$ = new Subject();
+// // source$.subscribe(subject$);
 
-source$.subscribe(
-   value => console.log(`Observer 1: ${value}`)
-);
+// source$.subscribe(
+//    value => console.log(`Observer 1: ${value}`)
+// );
 
-setTimeout(() => {
-   source$.subscribe(
-      value => console.log(`Observer 2: ${value}`)
-   );
-}, 1000);
+// setTimeout(() => {
+//    source$.subscribe(
+//       value => console.log(`Observer 2: ${value}`)
+//    );
+// }, 1000);
 
-setTimeout(() => {
-   source$.subscribe(
-      value => console.log(`Observer 3: ${value}`)
-   );
-}, 2000);
+// setTimeout(() => {
+//    source$.subscribe(
+//       value => console.log(`Observer 3: ${value}`)
+//    );
+// }, 2000);
 
-setTimeout(() => {
-   source$.subscribe(
-      value => console.log(`Observer 4: ${value}`),
-      null,
-      () => console.log('Observer 4 complete')
-   );
-}, 4500);
+// setTimeout(() => {
+//    source$.subscribe(
+//       value => console.log(`Observer 4: ${value}`),
+//       null,
+//       () => console.log('Observer 4 complete')
+//    );
+// }, 4500);
 
 // source$.connect();
 
 //#endregion
 
-//#region
+//#region schedulers
 
+console.log('start script.');
 
+let queue$ = of('QueueScheduler (synchronous)', queueScheduler);
+
+let asap$ = of('AsapScheduler (async micro task)', asapScheduler);
+
+let async$ = of('AsyncScheduler (asynchronous)', asyncScheduler);
+
+merge(queue$, asap$, async$)
+   .subscribe(
+      value => console.log(value)
+   )
+
+console.log('end script.');
 
 //#endregion
