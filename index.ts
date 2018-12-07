@@ -1,4 +1,4 @@
-import { Observable, of, from, fromEvent, concat, interval, throwError } from "rxjs";
+import { Observable, of, from, fromEvent, concat, interval, throwError, Subject } from "rxjs";
 import { ajax } from "rxjs/ajax";
 import { flatMap, mergeMap, filter, tap, catchError, take, takeUntil } from 'rxjs/operators';
 import { allBooks, allReaders } from "./data";
@@ -185,55 +185,71 @@ import { allBooks, allReaders } from "./data";
 
 //#region creating operators
 
-function grabAndLogClassics(year, log) {
-   return source$ => {
-      return new Observable(subscriber => {
-         return source$.subscribe(
-            book => {
-               if (book.publicationYear < year) {
-                  subscriber.next(book);
-                  if(log) {
-                     console.log(`Classic: ${book.title}`);
-                  }
-               }
-            }, 
-            error => subscriber.error(error),
-            () => subscriber.complete()
-         )
-      });
-   }
-}
+// function grabAndLogClassics(year, log) {
+//    return source$ => {
+//       return new Observable(subscriber => {
+//          return source$.subscribe(
+//             book => {
+//                if (book.publicationYear < year) {
+//                   subscriber.next(book);
+//                   if(log) {
+//                      console.log(`Classic: ${book.title}`);
+//                   }
+//                }
+//             }, 
+//             error => subscriber.error(error),
+//             () => subscriber.complete()
+//          )
+//       });
+//    }
+// }
 
-function grabClassics(year) {
-   return filter(book => book.publicationYear < year);
-}
+// function grabClassics(year) {
+//    return filter(book => book.publicationYear < year);
+// }
 
-function grabAndLogClassicsWithPipe(year, log) {
-   return source$ => source$.pipe(
-      filter(book => book.publicationYear < year),
-      tap(classicBook => log ? console.log(`Title: ${classicBook.title}`) : null)
-   )
-}
+// function grabAndLogClassicsWithPipe(year, log) {
+//    return source$ => source$.pipe(
+//       filter(book => book.publicationYear < year),
+//       tap(classicBook => log ? console.log(`Title: ${classicBook.title}`) : null)
+//    )
+// }
 
-ajax('/api/books')
-   .pipe(
-      flatMap(ajaxResponse => ajaxResponse.response),
-      // grabAndLogClassics(1930, false)
-      // filter<any>(book => book.publicationYear < 1950),
-      // tap(oldBook => console.log(`Title: ${oldBook.title}`))
-      // grabClassics(1950)
-      grabAndLogClassicsWithPipe(1930, true)
-   )
-   .subscribe(
-      finalValue => console.log(`VALUE: ${finalValue.title}`),
-      error => console.log(`ERROR: ${error}`),
-   );
+// ajax('/api/books')
+//    .pipe(
+//       flatMap(ajaxResponse => ajaxResponse.response),
+//       // grabAndLogClassics(1930, false)
+//       // filter<any>(book => book.publicationYear < 1950),
+//       // tap(oldBook => console.log(`Title: ${oldBook.title}`))
+//       // grabClassics(1950)
+//       grabAndLogClassicsWithPipe(1930, true)
+//    )
+//    .subscribe(
+//       finalValue => console.log(`VALUE: ${finalValue.title}`),
+//       error => console.log(`ERROR: ${error}`),
+//    );
+
+//#endregion
+
+//#region subjects
+
+let subject$ = new Subject();
+
+subject$.subscribe(
+   value => console.log(`Observer 1 ${value}`)
+);
+
+subject$.subscribe(
+   value => console.log(`Observer 2 ${value}`)
+);
+
+subject$.next('Hello!');
+
+let source$ = new Observable(subscriber => {
+   subscriber.next('Greetings!')
+});
+
+source$.subscribe(subject$);
 
 //#endregion
 
-
-//#region
-
-
-
-//#endregion
