@@ -1,5 +1,6 @@
-import { Observable, of, from, fromEvent, concat, interval } from "rxjs";
+import { Observable, of, from, fromEvent, concat, interval, throwError } from "rxjs";
 import { ajax } from "rxjs/ajax";
+import { mergeMap, filter, tap, catchError, take, takeUntil } from 'rxjs/operators';
 import { allBooks, allReaders } from "./data";
 
 //#region creating observables
@@ -103,12 +104,61 @@ import { allBooks, allReaders } from "./data";
 //     );
 // }, 2000);
 
-let timesDiv = document.getElementById("times");
-let button = document.getElementById("timerButton");
+// let timesDiv = document.getElementById("times");
+// let button = document.getElementById("timerButton");
 
-// let timer$ = interval(1000);
+// // let timer$ = interval(1000);
 
-let timer$ = new Observable<any>(subscriber => {
+// let timer$ = new Observable<any>(subscriber => {
+//    let i = 0;
+//    let intervalId = setInterval(() => {
+//       subscriber.next(i++);
+//    }, 1000);
+
+//    return () => {
+//       console.log('Executing teardown code.');
+//       clearInterval(intervalId);
+//    }
+// });
+
+// let timerConsoleSubscription = timer$.subscribe(
+//    value => console.log(`${new Date().toLocaleTimeString()} (${value})`)
+// );
+
+// let timerSubscription = timer$.subscribe(
+//   value =>
+//     (timesDiv.innerHTML += `${new Date().toLocaleTimeString()} (${value}) <br>`),
+//   null,
+//   () => console.log("All done!")
+// );
+
+// timerSubscription.add(timerConsoleSubscription);
+
+// fromEvent(button, "click").subscribe(event => timerSubscription.unsubscribe());
+
+//#endregion
+
+//#region using operators
+
+// ajax('/api/errors/500')
+//    .pipe(
+//       mergeMap(ajaxResponse => ajaxResponse.response),
+//       filter<any>(book => book.publicationYear < 1950),
+//       tap(oldbook => console.log(`Title: ${oldbook.title}`)),
+//       // catchError(err => of({title: 'Corduroy', author: 'Don Freeman'}))
+//       // catchError((err, caught) => caught)
+//       // catchError(err => throw `Something went wrong - ${err.message}`)
+//       catchError(err => return throwError(err.message))
+//    )
+//    .subscribe(
+//       finalValue => console.log(`VALUE: ${finalValue.title}`),
+//       error => console.log(`ERROR: ${error}`)
+//    );
+
+let timesDiv = document.getElementById('times');
+let button = document.getElementById('timerButton');
+
+let timer$ = new Observable(subscriber => {
    let i = 0;
    let intervalId = setInterval(() => {
       subscriber.next(i++);
@@ -116,23 +166,19 @@ let timer$ = new Observable<any>(subscriber => {
 
    return () => {
       console.log('Executing teardown code.');
-      clearInterval(intervalId);
+      clearInterval(intervalId)
    }
 });
 
-let timerConsoleSubscription = timer$.subscribe(
-   value => console.log(`${new Date().toLocaleTimeString()} (${value})`)
+let cancelTimer$ = fromEvent(button, 'click');
+
+timer$.pipe(
+   // take(3)
+   takeUntil(cancelTimer$)
+).subscribe(
+   value => timesDiv.innerHTML += `${new Date().toLocaleTimeString()} (${value}) <br>`,
+   null,
+   () => console.log('All done.')
 );
-
-let timerSubscription = timer$.subscribe(
-  value =>
-    (timesDiv.innerHTML += `${new Date().toLocaleTimeString()} (${value}) <br>`),
-  null,
-  () => console.log("All done!")
-);
-
-timerSubscription.add(timerConsoleSubscription);
-
-fromEvent(button, "click").subscribe(event => timerSubscription.unsubscribe());
 
 //#endregion
