@@ -1,6 +1,6 @@
 import { Observable, of, from, fromEvent, concat, interval, throwError } from "rxjs";
 import { ajax } from "rxjs/ajax";
-import { mergeMap, filter, tap, catchError } from 'rxjs/operators';
+import { mergeMap, filter, tap, catchError, take, takeUntil } from 'rxjs/operators';
 import { allBooks, allReaders } from "./data";
 
 //#region creating observables
@@ -140,19 +140,45 @@ import { allBooks, allReaders } from "./data";
 
 //#region using operators
 
-ajax('/api/errors/500')
-   .pipe(
-      mergeMap(ajaxResponse => ajaxResponse.response),
-      filter<any>(book => book.publicationYear < 1950),
-      tap(oldbook => console.log(`Title: ${oldbook.title}`)),
-      // catchError(err => of({title: 'Corduroy', author: 'Don Freeman'}))
-      // catchError((err, caught) => caught)
-      // catchError(err => throw `Something went wrong - ${err.message}`)
-      catchError(err => return throwError(err.message))
-   )
-   .subscribe(
-      finalValue => console.log(`VALUE: ${finalValue.title}`),
-      error => console.log(`ERROR: ${error}`)
-   );
+// ajax('/api/errors/500')
+//    .pipe(
+//       mergeMap(ajaxResponse => ajaxResponse.response),
+//       filter<any>(book => book.publicationYear < 1950),
+//       tap(oldbook => console.log(`Title: ${oldbook.title}`)),
+//       // catchError(err => of({title: 'Corduroy', author: 'Don Freeman'}))
+//       // catchError((err, caught) => caught)
+//       // catchError(err => throw `Something went wrong - ${err.message}`)
+//       catchError(err => return throwError(err.message))
+//    )
+//    .subscribe(
+//       finalValue => console.log(`VALUE: ${finalValue.title}`),
+//       error => console.log(`ERROR: ${error}`)
+//    );
+
+let timesDiv = document.getElementById('times');
+let button = document.getElementById('timerButton');
+
+let timer$ = new Observable(subscriber => {
+   let i = 0;
+   let intervalId = setInterval(() => {
+      subscriber.next(i++);
+   }, 1000);
+
+   return () => {
+      console.log('Executing teardown code.');
+      clearInterval(intervalId)
+   }
+});
+
+let cancelTimer$ = fromEvent(button, 'click');
+
+timer$.pipe(
+   // take(3)
+   takeUntil(cancelTimer$)
+).subscribe(
+   value => timesDiv.innerHTML += `${new Date().toLocaleTimeString()} (${value}) <br>`,
+   null,
+   () => console.log('All done.')
+);
 
 //#endregion
